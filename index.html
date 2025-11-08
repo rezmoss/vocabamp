@@ -1,0 +1,2247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VocabAmp - Smart Flashcards with FSRS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: ltr;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            margin: 5px 0;
+            font-size: 1.1em;
+        }
+
+        .tagline {
+            font-size: 0.95em;
+            opacity: 0.95;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 0;
+            right: 120px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .info-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .info-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .stats {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .action-btn {
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            width: 100%;
+        }
+
+        .settings-btn-stat {
+            background: #8b5cf6;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        }
+
+        .settings-btn-stat:hover {
+            background: #7c3aed;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+        }
+
+        .export-btn {
+            background: #10b981;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .export-btn:hover {
+            background: #059669;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .import-btn {
+            background: #3b82f6;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .import-btn:hover {
+            background: #2563eb;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .delete-all-btn {
+            background: #ef4444;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .delete-all-btn:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .card-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            min-height: 400px;
+            position: relative;
+        }
+
+        .add-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            font-size: 2em;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .add-button:hover {
+            transform: scale(1.1);
+            background: #764ba2;
+        }
+
+        .card-form {
+            display: none;
+        }
+
+        .card-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+            flex: 1;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .flashcard {
+            display: none;
+        }
+
+        .flashcard.active {
+            display: block;
+        }
+
+        .card-front, .card-back {
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-word {
+            font-size: 3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .pronunciation-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0;
+            transition: all 0.3s;
+        }
+
+        .pronunciation-btn:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+
+        .card-details {
+            width: 100%;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .card-details::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .card-details::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .card-details::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        .card-details::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .detail-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .detail-section h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .detail-section p {
+            color: #555;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            font-size: 0.95em;
+        }
+
+        .detail-section p strong {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .youglish-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .youglish-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .farsi-text {
+            font-size: 1.8em;
+            font-weight: 600;
+            text-align: center;
+            /* Direction will be set by browser based on content */
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .btn-know {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-know:hover {
+            background: #059669;
+        }
+
+        .btn-dont-know {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-dont-know:hover {
+            background: #dc2626;
+        }
+
+        .btn-show {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-show:hover {
+            background: #5568d3;
+        }
+
+        .no-cards {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .no-cards h2 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .card-progress {
+            font-size: 0.9em;
+            color: #999;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .card-info {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.85em;
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-label {
+            color: #666;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .retry-notice {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            font-size: 0.95em;
+            color: #92400e;
+        }
+
+        .retry-notice strong {
+            color: #b45309;
+        }
+
+        .feedback-message {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .feedback-message.incorrect {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 1.8em;
+        }
+
+        .close-modal {
+            background: #ef4444;
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        .cards-list {
+            margin-bottom: 20px;
+        }
+
+        .card-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .card-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .card-item.due-now {
+            border-left-color: #ef4444;
+            background: #fee;
+        }
+
+        .card-item.learning {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .card-item.review {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .card-item-left {
+            flex: 1;
+        }
+
+        .card-item-word {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .card-item-translation {
+            font-size: 0.9em;
+            color: #666;
+            direction: rtl;
+            text-align: left;
+        }
+
+        .card-item-right {
+            text-align: right;
+            margin-left: 20px;
+        }
+
+        .card-item-status {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .card-item-next {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .card-item-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 8px;
+            font-size: 0.85em;
+        }
+
+        .stat-badge {
+            background: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            color: #666;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .pagination-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #5568d3;
+        }
+
+        .pagination-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            color: #666;
+            font-weight: 600;
+        }
+
+        .clickable {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .clickable:hover {
+            transform: scale(1.05);
+        }
+
+        /* Settings Styles */
+        .setting-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .setting-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .setting-header h3 {
+            color: #333;
+            font-size: 1.2em;
+            margin: 0;
+            flex: 1;
+        }
+
+        .setting-toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .setting-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        .setting-toggle input:checked + .toggle-slider {
+            background-color: #10b981;
+        }
+
+        .setting-toggle input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .setting-options {
+            padding-left: 15px;
+            display: none;
+        }
+
+        .setting-options.active {
+            display: block;
+        }
+
+        .radio-label {
+            display: block;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .radio-label:hover {
+            background: #e9ecef;
+        }
+
+        .radio-label input {
+            margin-right: 10px;
+        }
+
+        .radio-label span {
+            font-size: 1em;
+            color: #333;
+        }
+
+        .select-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .setting-select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            background: white;
+            cursor: pointer;
+            transition: border 0.3s;
+        }
+
+        .setting-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .setting-select option {
+            padding: 10px;
+        }
+
+        /* Footer Styles */
+        .footer {
+            margin-top: 60px;
+            padding: 30px 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .footer-content {
+            color: white;
+        }
+
+        .footer-content p {
+            margin: 8px 0;
+            font-size: 1em;
+        }
+
+        .creator-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1em;
+            padding: 2px 8px;
+            border-radius: 4px;
+            transition: all 0.3s;
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+        }
+
+        .creator-link:hover {
+            background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.2));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .footer-subtitle {
+            font-size: 0.85em;
+            opacity: 0.9;
+            font-weight: 500;
+            margin-top: 5px;
+        }
+
+        /* Info Modal Styles */
+        .info-section {
+            margin-bottom: 25px;
+        }
+
+        .info-section h3 {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .info-section p {
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .info-section ul {
+            color: #555;
+        }
+
+        .info-section li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 VocabAmp</h1>
+            <p>Your Smart Flashcards</p>
+            <p class="tagline">AI-Powered Spaced Repetition Learning | Anki Alternative</p>
+            <button class="info-btn" onclick="showInfo()">ℹ️ Info</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item clickable" onclick="showCardsModal()">
+                <div class="stat-value" id="totalCards">0</div>
+                <div class="stat-label">Total Cards</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="dueCards">0</div>
+                <div class="stat-label">Due Now</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="masteredCards">0</div>
+                <div class="stat-label">Mastered</div>
+            </div>
+            <div class="stat-item">
+                <div style="display: flex; gap: 8px; flex-direction: column;">
+                    <button class="action-btn settings-btn-stat" onclick="showSettings()">
+                        ⚙️ Settings
+                    </button>
+                    <button class="action-btn export-btn" onclick="exportCards()">
+                        📥 Export
+                    </button>
+                    <button class="action-btn import-btn" onclick="document.getElementById('importFile').click()">
+                        📤 Import
+                    </button>
+                    <button class="action-btn delete-all-btn" onclick="confirmDeleteAll()">
+                        🗑️ Delete All
+                    </button>
+                </div>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importCards(event)">
+            </div>
+        </div>
+
+        <div class="card-container">
+            <!-- Add Card Form -->
+            <div class="card-form" id="cardForm">
+                <h2 style="margin-bottom: 20px; color: #333;">Add New Card</h2>
+                <form id="addCardForm">
+                    <div class="form-group">
+                        <label for="frontText">Front (Word/Phrase in English)</label>
+                        <input type="text" id="frontText" required placeholder="Enter a word or phrase...">
+                    </div>
+                    <div class="form-group">
+                        <label for="backText">Back (Optional - for custom phrases)</label>
+                        <textarea id="backText" placeholder="Leave empty for automatic translation and definitions..."></textarea>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-primary">Add Card</button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Flashcard Display -->
+            <div class="flashcard" id="flashcard">
+                <div class="card-progress" id="cardProgress"></div>
+                
+                <!-- Front: Word with Know/Don't Know buttons -->
+                <div class="card-front" id="cardFront">
+                    <div class="card-word" id="frontWord"></div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-dont-know" onclick="answerCard(false)">❌ I Don't Know</button>
+                        <button class="btn btn-know" onclick="answerCard(true)">✅ I Know</button>
+                    </div>
+                </div>
+
+                <!-- Back: Answer with all details -->
+                <div class="card-back" id="cardBack" style="display: none;">
+                    <div class="retry-notice" id="retryNotice" style="display: none;">
+                        <strong>⚠️ Retry:</strong> You didn't know this card. Let's practice it again!
+                    </div>
+                    
+                    <div class="feedback-message" id="feedbackMessage" style="display: none;"></div>
+                    
+                    <div class="card-word" id="backWord"></div>
+                    
+                    <button class="pronunciation-btn" onclick="playPronunciation()">
+                        🔊 Listen to Pronunciation
+                    </button>
+                    
+                    <div class="card-details">
+                        <div class="detail-section" id="translationSection">
+                            <h3>🌍 Translation</h3>
+                            <p class="farsi-text" id="translation"></p>
+                        </div>
+                        
+                        <div class="detail-section" id="definitionSection">
+                            <h3>💡 Definition</h3>
+                            <p id="definition"></p>
+                        </div>
+                        
+                        <div class="detail-section" id="collocationSection">
+                            <h3>🔗 Collocations & Examples</h3>
+                            <p id="collocations"></p>
+                        </div>
+
+                        <div class="detail-section" id="youglishSection">
+                            <h3>🎬 Real Pronunciation Examples</h3>
+                            <a id="youglishLink" href="#" target="_blank" rel="noopener noreferrer" class="youglish-link">
+                                Watch real people pronounce this word on YouGlish →
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="card-info">
+                        <div class="info-item">
+                            <span class="info-label">Stability</span>
+                            <span class="info-value" id="stabilityValue">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Difficulty</span>
+                            <span class="info-value" id="difficultyValue">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Session Attempts</span>
+                            <span class="info-value" id="sessionFailures">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Total Lapses</span>
+                            <span class="info-value" id="totalLapses">-</span>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="nextCard()" style="width: 100%;">Next Card →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Cards Message -->
+            <div class="no-cards" id="noCards">
+                <h2>📚 No Cards Yet</h2>
+                <p>Click the + button below to add your first flashcard!</p>
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading" id="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Loading card data...</p>
+            </div>
+        </div>
+
+        <button class="add-button" onclick="showAddForm()">+</button>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <p>Built with ❤️ by <a href="https://github.com/rezmoss/vocabamp" target="_blank" rel="noopener noreferrer" class="creator-link">Rez Moss</a></p>
+                <p class="footer-subtitle">Open Source • Privacy First • Science-Based Learning</p>
+            </div>
+        </footer>
+
+        <!-- Cards List Modal -->
+        <div class="modal" id="cardsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📚 All Flashcards</h2>
+                    <button class="close-modal" onclick="closeCardsModal()">×</button>
+                </div>
+                
+                <div class="cards-list" id="cardsList">
+                    <!-- Cards will be populated here -->
+                </div>
+                
+                <div class="pagination" id="pagination">
+                    <button class="pagination-btn" id="prevBtn" onclick="changePage(-1)">← Previous</button>
+                    <span class="pagination-info" id="pageInfo">Page 1 of 1</span>
+                    <button class="pagination-btn" id="nextBtn" onclick="changePage(1)">Next →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div class="modal" id="deleteConfirmModal">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2>⚠️ Delete All Cards?</h2>
+                    <button class="close-modal" onclick="closeDeleteConfirm()">×</button>
+                </div>
+                
+                <div style="padding: 20px 0;">
+                    <p style="font-size: 1.1em; color: #333; margin-bottom: 15px;">
+                        Are you sure you want to delete <strong id="deleteCount">0</strong> cards?
+                    </p>
+                    <p style="color: #ef4444; font-weight: 600;">
+                        ⚠️ This action cannot be undone!
+                    </p>
+                </div>
+                
+                <div class="form-buttons">
+                    <button class="btn btn-secondary" onclick="closeDeleteConfirm()">Cancel</button>
+                    <button class="btn" style="background: #ef4444; color: white;" onclick="deleteAllCards()">
+                        🗑️ Yes, Delete All
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div class="modal" id="settingsModal">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h2>⚙️ Settings</h2>
+                    <button class="close-modal" onclick="closeSettings()">×</button>
+                </div>
+                
+                <div style="padding: 20px 0;">
+                    <!-- Pronunciation Settings -->
+                    <div class="setting-section">
+                        <div class="setting-header">
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="pronunciationEnabled" onchange="updateSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <h3>🔊 Pronunciation</h3>
+                        </div>
+                        <div class="setting-options" id="pronunciationOptions">
+                            <label class="radio-label">
+                                <input type="radio" name="accent" value="en-US" checked onchange="updateSettings()">
+                                <span>🇺🇸 American English</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="accent" value="en-GB" onchange="updateSettings()">
+                                <span>🇬🇧 British English</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Translation Settings -->
+                    <div class="setting-section">
+                        <div class="setting-header">
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="translationEnabled" onchange="updateSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <h3>🌍 Translation</h3>
+                        </div>
+                        <div class="setting-options" id="translationOptions">
+                            <label class="select-label">Target Language:</label>
+                            <select id="translationLanguage" onchange="updateSettings()" class="setting-select">
+                                <option value="es">🇪🇸 Spanish</option>
+                                <option value="fa">🇮🇷 Persian (Farsi)</option>
+                                <option value="ar">🇸🇦 Arabic</option>
+                                <option value="fr">🇫🇷 French</option>
+                                <option value="de">🇩🇪 German</option>
+                                <option value="it">🇮🇹 Italian</option>
+                                <option value="pt">🇵🇹 Portuguese</option>
+                                <option value="ru">🇷🇺 Russian</option>
+                                <option value="ja">🇯🇵 Japanese</option>
+                                <option value="ko">🇰🇷 Korean</option>
+                                <option value="zh">🇨🇳 Chinese (Simplified)</option>
+                                <option value="tr">🇹🇷 Turkish</option>
+                                <option value="hi">🇮🇳 Hindi</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Definition Settings -->
+                    <div class="setting-section">
+                        <div class="setting-header">
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="definitionEnabled" checked onchange="updateSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <h3>💡 Definition & Examples</h3>
+                        </div>
+                    </div>
+
+                    <!-- YouGlish Settings -->
+                    <div class="setting-section">
+                        <div class="setting-header">
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="youglishEnabled" checked onchange="updateSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <h3>🎬 YouGlish (Real Pronunciation)</h3>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-buttons">
+                    <button class="btn btn-primary" onclick="closeSettings()">Save & Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Modal -->
+        <div class="modal" id="infoModal">
+            <div class="modal-content" style="max-width: 700px; max-height: 85vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h2>ℹ️ About VocabAmp</h2>
+                    <button class="close-modal" onclick="closeInfo()">×</button>
+                </div>
+                
+                <div style="padding: 20px 0; line-height: 1.8; color: #333;">
+                    
+                    <div class="info-section">
+                        <h3>🧠 What is VocabAmp?</h3>
+                        <p>VocabAmp is an advanced vocabulary learning tool that uses scientifically-proven spaced repetition algorithms to help you learn and retain words efficiently. Unlike traditional flashcards, this app intelligently schedules reviews based on how well you know each word.</p>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>🔬 The FSRS Algorithm</h3>
+                        <p>This app uses <strong>FSRS (Free Spaced Repetition Scheduler) v4</strong>, the most accurate open-source spaced repetition algorithm available. FSRS is based on the scientific principle of the <strong>Ebbinghaus Forgetting Curve</strong> and improves upon the classic SuperMemo SM-2 algorithm.</p>
+                        
+                        <p><strong>How it works:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>Stability (S):</strong> Measures how long you'll remember a word (in days)</li>
+                            <li><strong>Retrievability (R):</strong> Probability that you can recall the word right now</li>
+                            <li><strong>Difficulty (D):</strong> How inherently hard the word is for you (1-10 scale)</li>
+                        </ul>
+                        
+                        <p>When you mark a card as <strong>"I Know"</strong>, the algorithm increases its stability, scheduling the next review further in the future. When you mark it as <strong>"I Don't Know"</strong>, stability decreases, and you'll see it again immediately in the same session until you learn it.</p>
+                        
+                        <p><strong>Formula:</strong> R = e^(-t/S) where t is elapsed time since last review</p>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>📚 How This Helps You Learn</h3>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>Optimal Timing:</strong> Shows words right before you're about to forget them, maximizing retention</li>
+                            <li><strong>Personalized:</strong> Adapts to YOUR learning patterns and difficulty with each word</li>
+                            <li><strong>Efficient:</strong> Focus on words you struggle with; well-known words appear less often</li>
+                            <li><strong>Long-term Memory:</strong> Builds permanent retention through scientifically-timed reviews</li>
+                            <li><strong>Immediate Practice:</strong> Failed cards reappear instantly in the same session for rapid learning</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>✨ Features</h3>
+                        <ul style="margin-left: 20px;">
+                            <li>🔊 <strong>Pronunciation:</strong> Text-to-speech in American or British English</li>
+                            <li>🌍 <strong>Translation:</strong> Support for 13 languages via Google Translate API</li>
+                            <li>📖 <strong>Oxford-Style Definitions:</strong> Comprehensive definitions with synonyms, antonyms, and etymology</li>
+                            <li>💬 <strong>Examples & Collocations:</strong> Real usage examples and common word combinations</li>
+                            <li>🎬 <strong>YouGlish Integration:</strong> Watch real people pronounce words in context</li>
+                            <li>📊 <strong>Progress Tracking:</strong> View stability, difficulty, and review history for each card</li>
+                            <li>📥📤 <strong>Export/Import:</strong> Backup and transfer your cards between devices</li>
+                            <li>⚙️ <strong>Customizable:</strong> Toggle features on/off based on your learning preferences</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>🔒 100% Privacy & Security</h3>
+                        <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                            <p style="margin: 0; font-weight: 600; color: #065f46;">✅ Complete Privacy Guarantee:</p>
+                            <ul style="margin: 10px 0 0 20px; color: #065f46;">
+                                <li><strong>No cloud storage</strong> - Everything is stored locally in your browser</li>
+                                <li><strong>No user accounts</strong> - No login, registration, or authentication required</li>
+                                <li><strong>No tracking</strong> - Zero analytics, cookies, or data collection</li>
+                                <li><strong>No server communication</strong> - App runs 100% in your browser (except for dictionary APIs)</li>
+                                <li><strong>Your data stays yours</strong> - Only you can access your flashcards</li>
+                                <li><strong>Open source algorithm</strong> - FSRS is fully transparent and auditable</li>
+                            </ul>
+                            <p style="margin: 10px 0 0 0; color: #065f46;"><em>Note: The app only makes API calls to fetch word definitions and translations. No personal data is ever transmitted.</em></p>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>🎯 Best Practices</h3>
+                        <ul style="margin-left: 20px;">
+                            <li>Review cards daily for best results</li>
+                            <li>Be honest with "I Know" vs "I Don't Know" - the algorithm learns from your answers</li>
+                            <li>Use export regularly to backup your progress</li>
+                            <li>Enable translation if learning vocabulary in a foreign language context</li>
+                            <li>Listen to pronunciation and watch YouGlish videos for proper usage</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-section" style="background: #eff6ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                        <h3 style="margin-top: 0;">📖 Learn More About FSRS</h3>
+                        <p style="margin-bottom: 0;">FSRS is an open-source project with extensive research backing. The algorithm is used by thousands of learners worldwide in Anki and other spaced repetition systems.</p>
+                    </div>
+
+                </div>
+                
+                <div class="form-buttons">
+                    <button class="btn btn-primary" onclick="closeInfo()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // FSRS Algorithm Implementation
+        class FSRS {
+            constructor() {
+                // FSRS v4 parameters (optimized from research)
+                this.params = {
+                    w: [0.4, 0.6, 2.4, 5.8, 4.93, 0.94, 0.86, 0.01, 1.49, 0.14, 0.94, 2.18, 0.05, 0.34, 1.26, 0.29, 2.61],
+                    requestRetention: 0.9, // Target retrievability
+                    maximumInterval: 36500, // ~100 years in days
+                    minimumStability: 0.1
+                };
+            }
+
+            // Initialize new card
+            initCard() {
+                return {
+                    stability: this.params.w[0],
+                    difficulty: this.params.w[2],
+                    elapsedDays: 0,
+                    scheduledDays: 0,
+                    reps: 0,
+                    lapses: 0,
+                    sessionFailures: 0,
+                    lastReview: Date.now(),
+                    state: 'new' // new, learning, review, relearning
+                };
+            }
+
+            // Calculate retrievability (probability of recall)
+            calculateRetrievability(stability, elapsedDays) {
+                return Math.exp(-elapsedDays / stability);
+            }
+
+            // Calculate next interval based on target retrievability
+            calculateInterval(stability) {
+                const interval = stability * Math.log(this.params.requestRetention) / Math.log(0.9);
+                return Math.min(Math.max(Math.round(interval), 1), this.params.maximumInterval);
+            }
+
+            // Update card after review
+            review(card, rating) {
+                const now = Date.now();
+                const elapsedDays = (now - card.lastReview) / (1000 * 60 * 60 * 24);
+                
+                card.elapsedDays = elapsedDays;
+
+                const retrievability = this.calculateRetrievability(card.stability, elapsedDays);
+
+                if (rating) {
+                    // "I Know" - User successfully recalled
+                    card.reps += 1;
+                    
+                    // Reset session failures when user finally knows it
+                    card.sessionFailures = 0;
+                    
+                    // Correct recall - increase stability
+                    // The more lapses, the less we increase stability (harder words grow slower)
+                    const lapseFactor = Math.max(0.5, 1 - (card.lapses * 0.1));
+                    const stabilityIncrease = Math.exp(this.params.w[6]) * 
+                        (11 - card.difficulty) * 
+                        Math.pow(card.stability, this.params.w[7]) * 
+                        (Math.exp(this.params.w[8] * (1 - retrievability)) - 1) * 
+                        lapseFactor;
+                    
+                    card.stability = card.stability + stabilityIncrease;
+                    
+                    // Decrease difficulty slightly on success
+                    card.difficulty = Math.max(1, card.difficulty - this.params.w[15] * (card.difficulty - 1));
+                    
+                    // Update state based on performance
+                    if (card.reps >= 3 && card.stability >= 7) {
+                        card.state = 'review'; // Mastered
+                    } else if (card.reps >= 1) {
+                        card.state = 'learning'; // In progress
+                    } else {
+                        card.state = 'new'; // First time
+                    }
+                    
+                    // Schedule based on calculated interval
+                    card.scheduledDays = this.calculateInterval(card.stability);
+                    card.dueDate = now + (card.scheduledDays * 24 * 60 * 60 * 1000);
+                    
+                    card.lastReview = now;
+                } else {
+                    // "I Don't Know" - Failed recall
+                    // Track session failures (resets when they get it right)
+                    card.sessionFailures = (card.sessionFailures || 0) + 1;
+                    card.lapses += 1;
+                    
+                    // Decrease stability sharply
+                    card.stability = Math.max(
+                        this.params.minimumStability,
+                        this.params.w[9] * Math.pow(card.difficulty, this.params.w[10]) * 
+                        Math.pow(card.stability, this.params.w[11]) * 
+                        Math.exp(this.params.w[12] * (1 - retrievability))
+                    );
+                    
+                    // Increase difficulty on failure
+                    card.difficulty = Math.min(10, card.difficulty + this.params.w[16]);
+                    
+                    card.state = 'relearning';
+                    
+                    // CRITICAL: Show immediately in this session (due right now)
+                    card.scheduledDays = 0;
+                    card.dueDate = now; // Due immediately
+                    
+                    // Don't update lastReview for failures - keeps it fresh for immediate retry
+                }
+
+                return card;
+            }
+
+            // Check if card is due
+            isDue(card) {
+                return Date.now() >= card.dueDate;
+            }
+        }
+
+        // Application State
+        let cards = [];
+        let currentCardIndex = -1;
+        let fsrs = new FSRS();
+        let currentUtterance = null;
+
+        // Default settings
+        let settings = {
+            pronunciation: {
+                enabled: true,
+                accent: 'en-US'
+            },
+            translation: {
+                enabled: false,
+                language: 'es' // Changed to Spanish as default
+            },
+            definition: {
+                enabled: true
+            },
+            youglish: {
+                enabled: true
+            }
+        };
+
+        // Load settings from localStorage
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('flashcardSettings');
+            if (savedSettings) {
+                settings = JSON.parse(savedSettings);
+            }
+            applySettings();
+        }
+
+        // Save settings to localStorage
+        function saveSettings() {
+            localStorage.setItem('flashcardSettings', JSON.stringify(settings));
+        }
+
+        // Apply settings to UI
+        function applySettings() {
+            document.getElementById('pronunciationEnabled').checked = settings.pronunciation.enabled;
+            document.querySelector(`input[name="accent"][value="${settings.pronunciation.accent}"]`).checked = true;
+            document.getElementById('translationEnabled').checked = settings.translation.enabled;
+            document.getElementById('translationLanguage').value = settings.translation.language;
+            document.getElementById('definitionEnabled').checked = settings.definition.enabled;
+            document.getElementById('youglishEnabled').checked = settings.youglish.enabled;
+
+            // Show/hide options based on toggles
+            document.getElementById('pronunciationOptions').classList.toggle('active', settings.pronunciation.enabled);
+            document.getElementById('translationOptions').classList.toggle('active', settings.translation.enabled);
+        }
+
+        // Update settings when user changes them
+        function updateSettings() {
+            settings.pronunciation.enabled = document.getElementById('pronunciationEnabled').checked;
+            settings.pronunciation.accent = document.querySelector('input[name="accent"]:checked').value;
+            settings.translation.enabled = document.getElementById('translationEnabled').checked;
+            settings.translation.language = document.getElementById('translationLanguage').value;
+            settings.definition.enabled = document.getElementById('definitionEnabled').checked;
+            settings.youglish.enabled = document.getElementById('youglishEnabled').checked;
+
+            // Show/hide options
+            document.getElementById('pronunciationOptions').classList.toggle('active', settings.pronunciation.enabled);
+            document.getElementById('translationOptions').classList.toggle('active', settings.translation.enabled);
+
+            saveSettings();
+        }
+
+        // Show settings modal
+        function showSettings() {
+            applySettings();
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        // Close settings modal
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        // Show info modal
+        function showInfo() {
+            document.getElementById('infoModal').classList.add('active');
+        }
+
+        // Close info modal
+        function closeInfo() {
+            document.getElementById('infoModal').classList.remove('active');
+        }
+
+        // Load cards from localStorage
+        function loadCards() {
+            const savedCards = localStorage.getItem('flashcards');
+            if (savedCards) {
+                cards = JSON.parse(savedCards);
+            }
+            updateStats();
+            showNextCard();
+        }
+
+        // Save cards to localStorage
+        function saveCards() {
+            localStorage.setItem('flashcards', JSON.stringify(cards));
+            updateStats();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const total = cards.length;
+            const due = cards.filter(card => fsrs.isDue(card.fsrsData)).length;
+            const mastered = cards.filter(card => 
+                card.fsrsData.reps >= 5 && card.fsrsData.stability > 30
+            ).length;
+
+            document.getElementById('totalCards').textContent = total;
+            document.getElementById('dueCards').textContent = due;
+            document.getElementById('masteredCards').textContent = mastered;
+        }
+
+        // Show add form
+        function showAddForm() {
+            document.getElementById('cardForm').classList.add('active');
+            document.getElementById('flashcard').classList.remove('active');
+            document.getElementById('noCards').style.display = 'none';
+            document.getElementById('frontText').focus();
+        }
+
+        // Cancel form
+        function cancelForm() {
+            document.getElementById('cardForm').classList.remove('active');
+            document.getElementById('addCardForm').reset();
+            showNextCard();
+        }
+
+        // Fetch translation and definitions from API
+        async function fetchCardData(word) {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+
+            try {
+                // Get comprehensive definition from Free Dictionary API
+                const dictResponse = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                let definition = '';
+                let collocations = '';
+                let phonetic = '';
+
+                if (dictResponse.ok) {
+                    const dictData = await dictResponse.json();
+                    const entries = dictData[0];
+                    
+                    // Get phonetic pronunciation
+                    if (entries.phonetic) {
+                        phonetic = entries.phonetic;
+                    } else if (entries.phonetics && entries.phonetics.length > 0) {
+                        phonetic = entries.phonetics.find(p => p.text)?.text || '';
+                    }
+                    
+                    // Build comprehensive definition with all meanings
+                    if (entries.meanings && entries.meanings.length > 0) {
+                        let definitionParts = [];
+                        
+                        entries.meanings.forEach((meaning, index) => {
+                            const partOfSpeech = meaning.partOfSpeech;
+                            definitionParts.push(`\n${partOfSpeech.toUpperCase()}`);
+                            
+                            meaning.definitions.forEach((def, defIndex) => {
+                                definitionParts.push(`${defIndex + 1}. ${def.definition}`);
+                            });
+                            
+                            // Add synonyms if available
+                            if (meaning.synonyms && meaning.synonyms.length > 0) {
+                                definitionParts.push(`   Synonyms: ${meaning.synonyms.slice(0, 5).join(', ')}`);
+                            }
+                            
+                            // Add antonyms if available
+                            if (meaning.antonyms && meaning.antonyms.length > 0) {
+                                definitionParts.push(`   Antonyms: ${meaning.antonyms.slice(0, 5).join(', ')}`);
+                            }
+                        });
+                        
+                        definition = definitionParts.join('\n');
+                        
+                        // Build examples and collocations section
+                        let exampleParts = [];
+                        
+                        if (phonetic) {
+                            exampleParts.push(`PRONUNCIATION: ${phonetic}\n`);
+                        }
+                        
+                        entries.meanings.forEach((meaning, index) => {
+                            const partOfSpeech = meaning.partOfSpeech;
+                            let hasExamples = false;
+                            
+                            meaning.definitions.forEach((def, defIndex) => {
+                                if (def.example) {
+                                    if (!hasExamples) {
+                                        exampleParts.push(`\n${partOfSpeech.toUpperCase()} - Examples:`);
+                                        hasExamples = true;
+                                    }
+                                    exampleParts.push(`• "${def.example}"`);
+                                }
+                            });
+                        });
+                        
+                        // Add origin/etymology if available
+                        if (entries.origin) {
+                            exampleParts.push(`\nETYMOLOGY:\n${entries.origin}`);
+                        }
+                        
+                        collocations = exampleParts.join('\n') || 'No examples available';
+                    }
+                }
+
+                // If no definition found, try alternative API (Merriam-Webster collegiate)
+                if (!definition) {
+                    try {
+                        // Fallback: Try to get data from alternative sources
+                        definition = `Word: "${word}"\n\nDefinition not found in dictionary. This might be:\n• A proper noun\n• A technical term\n• A phrase or expression\n• Spelled differently`;
+                        collocations = 'Please verify the spelling or try breaking down the phrase into individual words.';
+                    } catch (e) {
+                        console.log('Fallback also failed');
+                    }
+                }
+
+                // Get translation based on settings
+                let translation = '';
+                if (settings.translation.enabled) {
+                    const targetLang = settings.translation.language;
+                    try {
+                        const translationResponse = await fetch(
+                            `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${targetLang}&dt=t&q=${encodeURIComponent(word)}`
+                        );
+                        
+                        if (translationResponse.ok) {
+                            const translationData = await translationResponse.json();
+                            // Google Translate API returns nested arrays
+                            if (translationData && translationData[0] && translationData[0][0]) {
+                                const rawTranslation = translationData[0][0][0];
+                                // Validate translation - must be actual text, not just punctuation
+                                if (rawTranslation && rawTranslation.length > 1) {
+                                    translation = rawTranslation;
+                                }
+                            }
+                        }
+                    } catch (translationError) {
+                        console.error('Translation error:', translationError);
+                    }
+                    
+                    // If Google Translate failed or returned invalid result, try LibreTranslate as backup
+                    if (!translation) {
+                        try {
+                            const libreResponse = await fetch('https://libretranslate.de/translate', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    q: word,
+                                    source: 'en',
+                                    target: targetLang,
+                                    format: 'text'
+                                })
+                            });
+                            
+                            if (libreResponse.ok) {
+                                const libreData = await libreResponse.json();
+                                const rawTranslation = libreData.translatedText;
+                                // Validate translation
+                                if (rawTranslation && rawTranslation.length > 1) {
+                                    translation = rawTranslation;
+                                }
+                            }
+                        } catch (libreError) {
+                            console.error('Libre translation also failed:', libreError);
+                        }
+                    }
+                }
+
+                loading.style.display = 'none';
+
+                return {
+                    definition: definition || `Word: "${word}" - Definition not available`,
+                    translation: translation || (settings.translation.enabled ? 'ترجمه یافت نشد' : ''),
+                    collocations: collocations || 'No examples available'
+                };
+            } catch (error) {
+                loading.style.display = 'none';
+                console.error('Error fetching card data:', error);
+                return {
+                    definition: `Word: "${word}"\n\nUnable to fetch definition. Please check your internet connection.`,
+                    translation: settings.translation.enabled ? 'خطا در دریافت ترجمه' : '',
+                    collocations: 'Error loading examples'
+                };
+            }
+        }
+
+        // Add new card
+        document.getElementById('addCardForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const frontText = document.getElementById('frontText').value.trim();
+            const backText = document.getElementById('backText').value.trim();
+
+            let cardData;
+            if (backText) {
+                // Custom back text provided
+                cardData = {
+                    definition: backText,
+                    translation: '',
+                    collocations: ''
+                };
+            } else {
+                // Fetch automatic data
+                cardData = await fetchCardData(frontText);
+            }
+
+            const newCard = {
+                id: Date.now(),
+                front: frontText,
+                back: backText || cardData.definition,
+                translation: cardData.translation,
+                definition: cardData.definition,
+                collocations: cardData.collocations,
+                fsrsData: fsrs.initCard(),
+                createdAt: Date.now()
+            };
+
+            // Initialize due date for new card (due immediately)
+            newCard.fsrsData.dueDate = Date.now();
+
+            cards.push(newCard);
+            saveCards();
+            
+            document.getElementById('addCardForm').reset();
+            cancelForm();
+        });
+
+        // Show next due card
+        function showNextCard() {
+            const dueCards = cards.filter(card => fsrs.isDue(card.fsrsData));
+            
+            if (dueCards.length === 0) {
+                document.getElementById('flashcard').classList.remove('active');
+                document.getElementById('noCards').style.display = 'block';
+                if (cards.length > 0) {
+                    document.getElementById('noCards').innerHTML = '<h2>🎉 All Done!</h2><p>No cards due right now. Come back later!</p>';
+                }
+                return;
+            }
+
+            // Sort by priority (least stable first)
+            dueCards.sort((a, b) => a.fsrsData.stability - b.fsrsData.stability);
+            
+            currentCardIndex = cards.indexOf(dueCards[0]);
+            displayCard();
+        }
+
+        // Store the user's answer temporarily
+        let userAnswer = null;
+
+        // User clicks "I Know" or "I Don't Know"
+        function answerCard(known) {
+            userAnswer = known;
+            showAnswer();
+        }
+
+        // Get language name from code
+        function getLanguageName(code) {
+            const languages = {
+                'es': 'Spanish',
+                'fa': 'Persian',
+                'ar': 'Arabic',
+                'fr': 'French',
+                'de': 'German',
+                'it': 'Italian',
+                'pt': 'Portuguese',
+                'ru': 'Russian',
+                'ja': 'Japanese',
+                'ko': 'Korean',
+                'zh': 'Chinese',
+                'tr': 'Turkish',
+                'hi': 'Hindi'
+            };
+            return languages[code] || 'Translation';
+        }
+
+        // Display current card (front side)
+        function displayCard() {
+            if (currentCardIndex === -1) return;
+
+            const card = cards[currentCardIndex];
+            
+            document.getElementById('cardForm').classList.remove('active');
+            document.getElementById('flashcard').classList.add('active');
+            document.getElementById('noCards').style.display = 'none';
+
+            document.getElementById('cardProgress').textContent = 
+                `Card ${cards.filter(c => fsrs.isDue(c.fsrsData)).indexOf(card) + 1} of ${cards.filter(c => fsrs.isDue(c.fsrsData)).length} due`;
+
+            document.getElementById('frontWord').textContent = card.front;
+            document.getElementById('backWord').textContent = card.front;
+            document.getElementById('translation').textContent = card.translation;
+            document.getElementById('definition').textContent = card.definition;
+            document.getElementById('collocations').textContent = card.collocations;
+
+            // Set YouGlish link dynamically
+            const youglishLink = document.getElementById('youglishLink');
+            const encodedWord = encodeURIComponent(card.front.toLowerCase().trim());
+            youglishLink.href = `https://youglish.com/pronounce/${encodedWord}/english/us`;
+
+            // Show retry notice if this card has been failed in this session
+            const retryNotice = document.getElementById('retryNotice');
+            if (card.fsrsData.sessionFailures > 0) {
+                retryNotice.style.display = 'block';
+                retryNotice.innerHTML = `<strong>⚠️ Retry #${card.fsrsData.sessionFailures}:</strong> You didn't know this card. Let's practice it again!`;
+            } else {
+                retryNotice.style.display = 'none';
+            }
+
+            // Update FSRS info
+            const retrievability = fsrs.calculateRetrievability(
+                card.fsrsData.stability,
+                (Date.now() - card.fsrsData.lastReview) / (1000 * 60 * 60 * 24)
+            );
+            
+            document.getElementById('stabilityValue').textContent = card.fsrsData.stability.toFixed(1) + ' days';
+            document.getElementById('difficultyValue').textContent = card.fsrsData.difficulty.toFixed(1) + '/10';
+            document.getElementById('sessionFailures').textContent = (card.fsrsData.sessionFailures || 0) + 'x';
+            document.getElementById('totalLapses').textContent = card.fsrsData.lapses;
+
+            // Update translation section header with selected language
+            const translationSection = document.getElementById('translationSection');
+            if (translationSection) {
+                const translationHeader = translationSection.querySelector('h3');
+                if (translationHeader) {
+                    const langName = getLanguageName(settings.translation.language);
+                    translationHeader.textContent = `🌍 ${langName} Translation`;
+                }
+            }
+
+            // Show only front
+            document.getElementById('cardFront').style.display = 'flex';
+            document.getElementById('cardBack').style.display = 'none';
+            document.getElementById('feedbackMessage').style.display = 'none';
+
+            // Hide sections based on settings
+            document.getElementById('translationSection').style.display = 
+                (settings.translation.enabled && card.translation) ? 'block' : 'none';
+            document.getElementById('definitionSection').style.display = 
+                (settings.definition.enabled && card.definition) ? 'block' : 'none';
+            document.getElementById('collocationSection').style.display = 
+                (settings.definition.enabled && card.collocations) ? 'block' : 'none';
+            
+            // Show YouGlish only for single words (not phrases) and if enabled
+            const isPhrase = card.front.trim().includes(' ');
+            document.getElementById('youglishSection').style.display = 
+                (settings.youglish.enabled && !isPhrase) ? 'block' : 'none';
+            
+            // Show/hide pronunciation button based on settings
+            const pronunciationBtn = document.querySelector('.pronunciation-btn');
+            if (pronunciationBtn) {
+                pronunciationBtn.style.display = settings.pronunciation.enabled ? 'flex' : 'none';
+            }
+
+            // Reset user answer
+            userAnswer = null;
+        }
+
+        // Show answer (back side of card)
+        function showAnswer() {
+            const feedbackMessage = document.getElementById('feedbackMessage');
+            
+            if (userAnswer === true) {
+                feedbackMessage.textContent = '✅ Great! You knew it. Let\'s verify you remembered correctly.';
+                feedbackMessage.className = 'feedback-message';
+                feedbackMessage.style.display = 'block';
+            } else if (userAnswer === false) {
+                feedbackMessage.textContent = '❌ Don\'t worry! Review the answer and you\'ll see it again soon.';
+                feedbackMessage.className = 'feedback-message incorrect';
+                feedbackMessage.style.display = 'block';
+            }
+            
+            document.getElementById('cardFront').style.display = 'none';
+            document.getElementById('cardBack').style.display = 'block';
+        }
+
+        // Move to next card (after seeing the answer)
+        function nextCard() {
+            if (currentCardIndex === -1 || userAnswer === null) return;
+
+            const card = cards[currentCardIndex];
+            
+            // Update FSRS based on user's answer
+            card.fsrsData = fsrs.review(card.fsrsData, userAnswer);
+            
+            saveCards();
+            showNextCard();
+        }
+
+        // Play pronunciation
+        function playPronunciation() {
+            if (currentCardIndex === -1) return;
+
+            const card = cards[currentCardIndex];
+            
+            // Cancel any ongoing speech
+            if (currentUtterance) {
+                speechSynthesis.cancel();
+            }
+
+            const utterance = new SpeechSynthesisUtterance(card.front);
+            utterance.lang = settings.pronunciation.accent; // Use setting
+            utterance.rate = 0.9;
+            
+            // Try to get voice matching the selected accent
+            const voices = speechSynthesis.getVoices();
+            const preferredVoice = voices.find(voice => voice.lang === settings.pronunciation.accent);
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+
+            currentUtterance = utterance;
+            speechSynthesis.speak(utterance);
+        }
+
+        // Load voices
+        speechSynthesis.addEventListener('voiceschanged', () => {
+            const voices = speechSynthesis.getVoices();
+        });
+
+        // Initialize app
+        loadCards();
+
+        // Pagination variables
+        let currentPage = 1;
+        const cardsPerPage = 10;
+
+        // Format time until next review
+        function formatNextReview(dueDate) {
+            const now = Date.now();
+            const diffMs = dueDate - now;
+            
+            if (diffMs <= 0) {
+                return { text: 'Due now', class: 'due-now' };
+            }
+            
+            const diffMinutes = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            
+            // Less than 1 hour
+            if (diffMinutes < 60) {
+                return { text: `${diffMinutes}min`, class: 'due-now' };
+            }
+            // Less than 24 hours
+            else if (diffHours < 24) {
+                return { text: `${diffHours}h`, class: 'due-now' };
+            }
+            // Less than 7 days - show exact days
+            else if (diffDays < 7) {
+                return { text: `${diffDays} day${diffDays > 1 ? 's' : ''}`, class: 'learning' };
+            }
+            // Less than 30 days
+            else if (diffDays < 30) {
+                return { text: `${diffDays} days`, class: 'learning' };
+            }
+            // Less than 365 days - show in months
+            else if (diffDays < 365) {
+                const months = Math.floor(diffDays / 30);
+                const remainingDays = diffDays % 30;
+                if (remainingDays > 7) {
+                    return { text: `${months}m ${remainingDays}d`, class: 'review' };
+                }
+                return { text: `${months} month${months > 1 ? 's' : ''}`, class: 'review' };
+            }
+            // More than a year
+            else {
+                const years = Math.floor(diffDays / 365);
+                const remainingDays = diffDays % 365;
+                const remainingMonths = Math.floor(remainingDays / 30);
+                if (remainingMonths > 0) {
+                    return { text: `${years}y ${remainingMonths}m`, class: 'review' };
+                }
+                return { text: `${years} year${years > 1 ? 's' : ''}`, class: 'review' };
+            }
+        }
+
+        // Show cards modal
+        function showCardsModal() {
+            if (cards.length === 0) {
+                alert('No cards yet! Add some cards first.');
+                return;
+            }
+            
+            currentPage = 1;
+            renderCardsList();
+            document.getElementById('cardsModal').classList.add('active');
+        }
+
+        // Close cards modal
+        function closeCardsModal() {
+            document.getElementById('cardsModal').classList.remove('active');
+        }
+
+        // Render cards list with pagination
+        function renderCardsList() {
+            const cardsList = document.getElementById('cardsList');
+            const startIndex = (currentPage - 1) * cardsPerPage;
+            const endIndex = startIndex + cardsPerPage;
+            const paginatedCards = cards.slice(startIndex, endIndex);
+            
+            if (paginatedCards.length === 0) {
+                cardsList.innerHTML = '<p style="text-align: center; color: #999;">No cards to display</p>';
+                return;
+            }
+            
+            cardsList.innerHTML = paginatedCards.map(card => {
+                const nextReview = formatNextReview(card.fsrsData.dueDate);
+                const retrievability = fsrs.calculateRetrievability(
+                    card.fsrsData.stability,
+                    (Date.now() - card.fsrsData.lastReview) / (1000 * 60 * 60 * 24)
+                );
+                
+                return `
+                    <div class="card-item ${nextReview.class}">
+                        <div class="card-item-left">
+                            <div class="card-item-word">${card.front}</div>
+                            <div class="card-item-translation">${card.translation || ''}</div>
+                            <div class="card-item-stats">
+                                <span class="stat-badge">📊 Stability: ${card.fsrsData.stability.toFixed(1)}d</span>
+                                <span class="stat-badge">🎯 Difficulty: ${card.fsrsData.difficulty.toFixed(1)}/10</span>
+                                <span class="stat-badge">🔄 Reviews: ${card.fsrsData.reps}</span>
+                                <span class="stat-badge">❌ Lapses: ${card.fsrsData.lapses}</span>
+                            </div>
+                        </div>
+                        <div class="card-item-right">
+                            <div class="card-item-status">${card.fsrsData.state}</div>
+                            <div class="card-item-next">${nextReview.text}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Update pagination
+            const totalPages = Math.ceil(cards.length / cardsPerPage);
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage === totalPages;
+        }
+
+        // Change page
+        function changePage(direction) {
+            const totalPages = Math.ceil(cards.length / cardsPerPage);
+            const newPage = currentPage + direction;
+            
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                renderCardsList();
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('cardsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCardsModal();
+            }
+        });
+
+        document.getElementById('deleteConfirmModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteConfirm();
+            }
+        });
+
+        // Confirm delete all cards
+        function confirmDeleteAll() {
+            if (cards.length === 0) {
+                alert('No cards to delete!');
+                return;
+            }
+            
+            document.getElementById('deleteCount').textContent = cards.length;
+            document.getElementById('deleteConfirmModal').classList.add('active');
+        }
+
+        // Close delete confirmation modal
+        function closeDeleteConfirm() {
+            document.getElementById('deleteConfirmModal').classList.remove('active');
+        }
+
+        // Delete all cards
+        function deleteAllCards() {
+            cards = [];
+            currentCardIndex = -1;
+            saveCards();
+            
+            closeDeleteConfirm();
+            
+            // Show success message
+            document.getElementById('flashcard').classList.remove('active');
+            document.getElementById('noCards').style.display = 'block';
+            document.getElementById('noCards').innerHTML = '<h2>✅ All Cards Deleted</h2><p>Click the + button below to add new flashcards!</p>';
+            
+            updateStats();
+        }
+
+        // Export cards to JSON file
+        function exportCards() {
+            if (cards.length === 0) {
+                alert('No cards to export!');
+                return;
+            }
+
+            const exportData = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                totalCards: cards.length,
+                cards: cards
+            };
+
+            const jsonString = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `flashcards-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert(`✅ Successfully exported ${cards.length} cards!`);
+        }
+
+        // Import cards from JSON file
+        function importCards(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importData = JSON.parse(e.target.result);
+                    
+                    // Validate the import data
+                    if (!importData.cards || !Array.isArray(importData.cards)) {
+                        alert('❌ Invalid file format! Please select a valid flashcards backup file.');
+                        return;
+                    }
+
+                    // Ask user if they want to merge or replace
+                    let confirmMessage = '';
+                    if (cards.length > 0) {
+                        confirmMessage = `You have ${cards.length} existing cards.\n\nImport file contains ${importData.cards.length} cards.\n\nChoose:\n- OK to MERGE (add to existing cards)\n- Cancel to REPLACE (delete existing cards)`;
+                        
+                        const shouldMerge = confirm(confirmMessage);
+                        
+                        if (shouldMerge) {
+                            // Merge: Add imported cards to existing
+                            const importedCards = importData.cards.map(card => ({
+                                ...card,
+                                id: Date.now() + Math.random() // Generate new IDs to avoid conflicts
+                            }));
+                            cards = [...cards, ...importedCards];
+                            alert(`✅ Successfully imported ${importData.cards.length} cards!\n\nTotal cards now: ${cards.length}`);
+                        } else {
+                            // Replace: Clear existing and use imported
+                            cards = importData.cards;
+                            alert(`✅ Successfully imported ${cards.length} cards!\n\nPrevious cards have been replaced.`);
+                        }
+                    } else {
+                        // No existing cards, just import
+                        cards = importData.cards;
+                        alert(`✅ Successfully imported ${cards.length} cards!`);
+                    }
+
+                    saveCards();
+                    showNextCard();
+                    
+                } catch (error) {
+                    console.error('Import error:', error);
+                    alert('❌ Error importing file! Please make sure the file is a valid flashcards backup.');
+                }
+            };
+            
+            reader.readAsText(file);
+            
+            // Reset file input so the same file can be imported again
+            event.target.value = '';
+        }
+
+        // Load voices
+        speechSynthesis.addEventListener('voiceschanged', () => {
+            const voices = speechSynthesis.getVoices();
+        });
+
+        // Initialize app
+        loadSettings(); // Load settings first
+        loadCards();
+
+        // Close modals when clicking outside
+        document.getElementById('settingsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSettings();
+            }
+        });
+
+        document.getElementById('infoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeInfo();
+            }
+        });
+
+        document.getElementById('infoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeInfo();
+            }
+        });
+    </script>
+</body>
+</html>
